@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Chat</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="chat-app" id="chatApp" style="display: none;">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Chats</h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <span id="currentUserDisplay" style="font-weight: 600; font-size: 0.9rem; margin-top: 3px;"></span>
+                    <button id="logoutBtn" class="logout-btn">Logout</button>
+                </div>
+            </div>
+            <ul class="user-list" id="userList">
+                <!-- User items injected by JS -->
+            </ul>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="chat-main" id="chatMain" style="display: none;">
+            <div class="chat-header">
+                <button class="back-btn" id="backBtn">←</button>
+                <div class="avatar" id="chatHeaderAvatar">U</div>
+                <div class="user-info">
+                    <div class="user-name" id="chatHeaderName">User Name</div>
+                    <div class="user-status" id="chatHeaderStatus">offline</div>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages injected by JS -->
+            </div>
+
+            <div style="padding: 0 1.5rem 0.5rem 1.5rem; font-size: 0.8rem; color: #888; display: none;"
+                id="typingIndicator">
+                typing...
+            </div>
+
+            <form class="chat-input-container" id="chatForm">
+                <input type="text" id="messageInput" class="chat-input" placeholder="Type a message..."
+                    autocomplete="off">
+                <button type="submit" class="send-btn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                    </svg>
+                </button>
+            </form>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-chat" id="emptyChat">
+            Select a conversation to start chatting
+        </div>
+    </div>
+
+    <!-- Socket.IO library via CDN -->
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script src="js/chat.js"></script>
+</body>
+
+</html>
