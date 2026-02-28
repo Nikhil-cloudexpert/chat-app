@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Nexus Chat</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 </head>
 <body class="chat-body">
+
 <div class="chat-app" id="chat-app">
 
-  <!-- SIDEBAR -->
+  <!-- ══ SIDEBAR ════════════════════════════════════════════════════════════ -->
   <aside class="sidebar" id="sidebar">
     <header class="sidebar-header">
       <div class="sidebar-brand">
@@ -35,7 +36,7 @@
 
     <div class="search-bar">
       <svg viewBox="0 0 24 24" fill="none" width="15"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      <input type="text" id="search-input" placeholder="Search users..." oninput="filterUsers(this.value)" />
+      <input type="text" id="search-input" placeholder="Search users..." oninput="filterUsers(this.value)"/>
     </div>
 
     <div class="users-list" id="users-list">
@@ -46,12 +47,12 @@
     </div>
   </aside>
 
-  <!-- CHAT PANEL -->
+  <!-- ══ CHAT PANEL ══════════════════════════════════════════════════════════ -->
   <main class="chat-panel" id="chat-panel">
 
     <div class="empty-state" id="empty-state">
-      <div class="empty-icon">
-        <svg viewBox="0 0 80 80" fill="none" width="68">
+      <div class="empty-icon float-anim">
+        <svg viewBox="0 0 80 80" fill="none" width="72">
           <circle cx="40" cy="40" r="40" fill="url(#eg)"/>
           <path d="M40 16C28.954 16 20 24.954 20 36c0 3.347.824 6.503 2.282 9.267L20 52l7.267-2.282A19.9 19.9 0 0040 52c11.046 0 20-8.954 20-16S51.046 16 40 16z" fill="white" fill-opacity="0.9"/>
           <defs><linearGradient id="eg" x1="0" y1="0" x2="80" y2="80"><stop stop-color="#6C63FF"/><stop offset="1" stop-color="#3ECFCF"/></linearGradient></defs>
@@ -59,10 +60,17 @@
       </div>
       <h3>Welcome to Nexus</h3>
       <p>Select a user to start chatting</p>
+      <div class="feature-pills">
+        <span class="pill">💬 Text</span>
+        <span class="pill">🖼️ Images</span>
+        <span class="pill">🎥 Videos</span>
+        <span class="pill">🎞️ GIFs</span>
+      </div>
     </div>
 
     <div class="active-chat hidden" id="active-chat">
 
+      <!-- Chat Header -->
       <header class="chat-header">
         <button class="back-btn" id="back-btn" onclick="closeChat()">
           <svg viewBox="0 0 24 24" fill="none" width="22"><path d="M19 12H5M5 12l7 7M5 12l7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -77,8 +85,24 @@
         </div>
       </header>
 
+      <!-- Messages -->
       <div class="messages-area" id="messages-area"></div>
 
+      <!-- Upload Preview Bar -->
+      <div class="upload-preview-bar hidden" id="upload-preview-bar">
+        <div class="upload-preview-inner">
+          <div id="upload-preview-content"></div>
+          <button class="remove-upload-btn" onclick="cancelUpload()">
+            <svg viewBox="0 0 24 24" fill="none" width="16"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <button class="send-media-btn" id="send-media-btn" onclick="sendMediaMessage()">
+          <svg viewBox="0 0 24 24" fill="none" width="18"><path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Send
+        </button>
+      </div>
+
+      <!-- Typing Indicator -->
       <div class="typing-row hidden" id="typing-row">
         <div class="typing-bubble">
           <span class="typing-dot"></span>
@@ -88,13 +112,35 @@
         <span id="typing-label">typing...</span>
       </div>
 
+      <!-- Input Bar -->
       <div class="input-bar">
+        <!-- Attach button -->
+        <div class="attach-wrap">
+          <button class="attach-btn" onclick="toggleAttachMenu()" title="Attach media">
+            <svg viewBox="0 0 24 24" fill="none" width="21"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="attach-menu hidden" id="attach-menu">
+            <label class="attach-item" title="Image / GIF">
+              <input type="file" id="image-input" accept="image/*" onchange="handleFileSelect(event,'image')" hidden/>
+              <svg viewBox="0 0 24 24" fill="none" width="20"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <span>Photo / GIF</span>
+            </label>
+            <label class="attach-item" title="Video">
+              <input type="file" id="video-input" accept="video/*" onchange="handleFileSelect(event,'video')" hidden/>
+              <svg viewBox="0 0 24 24" fill="none" width="20"><path d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <span>Video</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Emoji button -->
         <button class="emoji-btn" onclick="toggleEmojiPicker()" title="Emoji">
           <svg viewBox="0 0 24 24" fill="none" width="22"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/><path d="M8 13s1.5 2 4 2 4-2 4-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="9" cy="9.5" r="1" fill="currentColor"/><circle cx="15" cy="9.5" r="1" fill="currentColor"/></svg>
         </button>
         <div class="emoji-picker hidden" id="emoji-picker">
           <div class="emoji-grid" id="emoji-grid"></div>
         </div>
+
         <div class="msg-input-wrap">
           <textarea id="message-input" placeholder="Type a message..." rows="1" maxlength="4000"></textarea>
         </div>
@@ -108,13 +154,29 @@
 
 <!-- Profile Modal -->
 <div class="modal-overlay hidden" id="profile-modal" onclick="hideProfile()">
-  <div class="modal-card" onclick="event.stopPropagation()">
+  <div class="modal-card glass-card" onclick="event.stopPropagation()">
     <div class="modal-avatar" id="profile-modal-avatar">?</div>
     <div class="modal-username" id="profile-modal-name">User</div>
     <div class="modal-tag">Your account</div>
     <button class="btn-primary" style="margin-top:20px" onclick="logout()">Sign Out</button>
     <button class="btn-ghost" onclick="hideProfile()">Close</button>
   </div>
+</div>
+
+<!-- Lightbox for media -->
+<div class="lightbox hidden" id="lightbox" onclick="closeLightbox()">
+  <div class="lightbox-inner" onclick="event.stopPropagation()">
+    <button class="lightbox-close" onclick="closeLightbox()">
+      <svg viewBox="0 0 24 24" fill="none" width="22"><path d="M18 6L6 18M6 6l12 12" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <div id="lightbox-content"></div>
+  </div>
+</div>
+
+<!-- Upload progress toast -->
+<div class="upload-toast hidden" id="upload-toast">
+  <div class="toast-spinner"></div>
+  <span id="toast-text">Uploading...</span>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
