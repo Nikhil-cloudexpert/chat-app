@@ -1,25 +1,212 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Real-Time Chat</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nexus Chat · Sign In</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 </head>
-<body>
-    <div class="auth-container">
-        <h2>Welcome Back</h2>
-        <p>Login to your account to continue chatting</p>
-        <form id="loginForm" class="auth-form">
-            <input type="text" id="username" placeholder="Username" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <button type="submit" class="auth-btn">Login</button>
-        </form>
-        <div class="auth-link">
-            Don't have an account? <a href="register.html">Register</a>
-        </div>
-        <div id="errorMessage" style="color: red; margin-top: 10px; font-size: 0.9rem; display: none;"></div>
+<body class="login-body">
+
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <div class="login-container">
+    <div class="login-brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 48 48" fill="none" width="44" height="44">
+          <circle cx="24" cy="24" r="24" fill="url(#lg1)"/>
+          <path d="M24 10C16.268 10 10 16.268 10 24c0 2.508.65 4.863 1.79 6.912L10 38l7.412-1.79A13.928 13.928 0 0024 38c7.732 0 14-6.268 14-14S31.732 10 24 10z" fill="white"/>
+          <defs>
+            <linearGradient id="lg1" x1="0" y1="0" x2="48" y2="48">
+              <stop offset="0%" stop-color="#6C63FF"/>
+              <stop offset="100%" stop-color="#3ECFCF"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <span class="brand-name">Nexus Chat</span>
     </div>
-    <script src="js/login.js"></script>
+
+    <div class="login-card">
+      <div class="auth-tabs">
+        <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Sign In</button>
+        <button class="tab-btn" id="tab-register" onclick="switchTab('register')">Register</button>
+        <div class="tab-slider" id="tab-slider"></div>
+      </div>
+
+      <div class="auth-error hidden" id="auth-error"></div>
+      <div class="auth-success hidden" id="auth-success"></div>
+
+      <!-- Login Form -->
+      <form class="auth-form" id="login-form" onsubmit="handleLogin(event)">
+        <h2 class="form-title">Welcome back</h2>
+        <p class="form-sub">Sign in to continue chatting</p>
+
+        <div class="field-group">
+          <label class="field-label">Username</label>
+          <div class="field-wrap">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" width="18"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <input type="text" id="login-username" placeholder="Enter your username" maxlength="30" autocomplete="username" required />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Password</label>
+          <div class="field-wrap">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" width="18"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <input type="password" id="login-password" placeholder="Enter your password" autocomplete="current-password" required />
+            <button type="button" class="toggle-pw" onclick="togglePw('login-password', this)">
+              <svg viewBox="0 0 24 24" fill="none" width="17"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary" id="login-btn">
+          <span class="btn-label">Sign In</span>
+          <div class="btn-spinner hidden"></div>
+        </button>
+      </form>
+
+      <!-- Register Form -->
+      <form class="auth-form hidden" id="register-form" onsubmit="handleRegister(event)">
+        <h2 class="form-title">Create account</h2>
+        <p class="form-sub">Join the conversation today</p>
+
+        <div class="field-group">
+          <label class="field-label">Username</label>
+          <div class="field-wrap">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" width="18"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <input type="text" id="reg-username" placeholder="Choose a username" maxlength="30" autocomplete="username" required />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Password</label>
+          <div class="field-wrap">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" width="18"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <input type="password" id="reg-password" placeholder="Min 4 characters" autocomplete="new-password" required />
+            <button type="button" class="toggle-pw" onclick="togglePw('reg-password', this)">
+              <svg viewBox="0 0 24 24" fill="none" width="17"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Confirm Password</label>
+          <div class="field-wrap">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" width="18"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <input type="password" id="reg-confirm" placeholder="Repeat password" autocomplete="new-password" required />
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary" id="register-btn">
+          <span class="btn-label">Create Account</span>
+          <div class="btn-spinner hidden"></div>
+        </button>
+      </form>
+    </div>
+
+    <p class="login-footer">Secure &middot; Private &middot; Realtime</p>
+  </div>
+
+  <script>
+    function switchTab(tab) {
+      document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+      document.getElementById('register-form').classList.toggle('hidden', tab !== 'register');
+      document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+      document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+      document.getElementById('tab-slider').style.transform = tab === 'login' ? 'translateX(0)' : 'translateX(100%)';
+      clearMessages();
+    }
+
+    function togglePw(id, btn) {
+      const input = document.getElementById(id);
+      input.type = input.type === 'password' ? 'text' : 'password';
+      btn.style.opacity = input.type === 'text' ? '1' : '0.5';
+    }
+
+    function setLoading(btnId, loading) {
+      const btn = document.getElementById(btnId);
+      btn.querySelector('.btn-label').classList.toggle('hidden', loading);
+      btn.querySelector('.btn-spinner').classList.toggle('hidden', !loading);
+      btn.disabled = loading;
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('auth-error');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      document.getElementById('auth-success').classList.add('hidden');
+      el.style.animation = 'none';
+      requestAnimationFrame(() => { el.style.animation = 'shakeX 0.4s ease'; });
+    }
+
+    function showSuccess(msg) {
+      document.getElementById('auth-success').textContent = msg;
+      document.getElementById('auth-success').classList.remove('hidden');
+      document.getElementById('auth-error').classList.add('hidden');
+    }
+
+    function clearMessages() {
+      document.getElementById('auth-error').classList.add('hidden');
+      document.getElementById('auth-success').classList.add('hidden');
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('login-username').value.trim();
+      const password = document.getElementById('login-password').value;
+      if (!username || !password) return showError('Please fill in all fields');
+      setLoading('login-btn', true);
+      clearMessages();
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) { showError(data.error || 'Login failed'); setLoading('login-btn', false); return; }
+        showSuccess('Welcome back! Redirecting...');
+        setTimeout(() => window.location.href = '/chat', 800);
+      } catch {
+        showError('Connection error. Try again.');
+        setLoading('login-btn', false);
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const username = document.getElementById('reg-username').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const confirm = document.getElementById('reg-confirm').value;
+      if (!username || !password) return showError('Please fill in all fields');
+      if (password !== confirm) return showError('Passwords do not match');
+      if (password.length < 4) return showError('Password must be at least 4 characters');
+      setLoading('register-btn', true);
+      clearMessages();
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await res.json();
+        if (!res.ok) { showError(data.error || 'Registration failed'); setLoading('register-btn', false); return; }
+        showSuccess('Account created! Redirecting...');
+        setTimeout(() => window.location.href = '/chat', 800);
+      } catch {
+        showError('Connection error. Try again.');
+        setLoading('register-btn', false);
+      }
+    }
+
+    document.getElementById('login-username').focus();
+  </script>
 </body>
 </html>

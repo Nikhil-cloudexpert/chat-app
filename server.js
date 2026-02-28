@@ -1,8 +1,3 @@
-/**
- * WhatsApp-Style Chat Server
- * Express + Socket.io + MongoDB + Session Auth
- */
-
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -14,16 +9,13 @@ const path = require("path");
 const User = require("./models/User");
 const Message = require("./models/Message");
 
-// ─── Config ───────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/chatauth";
-const SESSION_SECRET = process.env.SESSION_SECRET || "supersecret_change_in_prod";
+const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/nexuschat";
+const SESSION_SECRET = process.env.SESSION_SECRET || "nexus_secret_change_in_prod";
 
-// ─── App Setup ────────────────────────────────────────────────────────────────
 const app = express();
 const server = http.createServer(app);
 
-// ─── Session Middleware ───────────────────────────────────────────────────────
 const sessionMiddleware = session({
   secret: SESSION_SECRET,
   resave: false,
@@ -37,68 +29,60 @@ app.use(express.urlencoded({ extended: true }));
 app.use(sessionMiddleware);
 app.use(express.static(path.join(__dirname, "public")));
 
-// ─── Socket.io Setup ──────────────────────────────────────────────────────────
 const io = new Server(server, { cors: { origin: "*" } });
 
-// Share session with socket.io
 io.use((socket, next) => {
   sessionMiddleware(socket.request, {}, next);
 });
 
-// ─── MongoDB Connection ───────────────────────────────────────────────────────
 mongoose
   .connect(MONGO_URI)
   .then(() => console.log("✅ MongoDB connected"))
   .catch((err) => console.error("❌ MongoDB error:", err.message));
 
-// ─── Auth Middleware ──────────────────────────────────────────────────────────
 function requireAuth(req, res, next) {
   if (req.session && req.session.userId) return next();
   res.status(401).json({ error: "Unauthorized" });
 }
 
-// ─── REST Routes ──────────────────────────────────────────────────────────────
+// ── Routes ────────────────────────────────────────────────────────────────────
 
-// Serve login page
 app.get("/", (req, res) => {
   if (req.session.userId) return res.redirect("/chat");
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// Serve chat page (protected)
 app.get("/chat", (req, res) => {
   if (!req.session.userId) return res.redirect("/");
   res.sendFile(path.join(__dirname, "public", "chat.html"));
 });
 
-// Register
 app.post("/api/register", async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: "Username and password required" });
-    if (username.length < 2) return res.status(400).json({ error: "Username must be at least 2 characters" });
+    if (username.trim().length < 2) return res.status(400).json({ error: "Username must be at least 2 characters" });
     if (password.length < 4) return res.status(400).json({ error: "Password must be at least 4 characters" });
 
-    const existing = await User.findOne({ username: { $regex: new RegExp(`^${username}$`, "i") } });
+    const existing = await User.findOne({ username: { $regex: new RegExp(`^${username.trim()}$`, "i") } });
     if (existing) return res.status(409).json({ error: "Username already taken" });
 
-    const user = await User.create({ username, password });
+    const user = await User.create({ username: username.trim(), password });
     req.session.userId = user._id;
     req.session.username = user.username;
     res.json({ success: true, user: { id: user._id, username: user.username } });
   } catch (err) {
-    console.error("Register error:", err);
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-// Login
 app.post("/api/login", async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: "Username and password required" });
 
-    const user = await User.findOne({ username: { $regex: new RegExp(`^${username}$`, "i") } });
+    const user = await User.findOne({ username: { $regex: new RegExp(`^${username.trim()}$`, "i") } });
     if (!user) return res.status(401).json({ error: "Invalid username or password" });
 
     const match = await user.comparePassword(password);
@@ -108,12 +92,11 @@ app.post("/api/login", async (req, res) => {
     req.session.username = user.username;
     res.json({ success: true, user: { id: user._id, username: user.username } });
   } catch (err) {
-    console.error("Login error:", err);
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-// Logout
 app.post("/api/logout", async (req, res) => {
   try {
     if (req.session.userId) {
@@ -126,7 +109,6 @@ app.post("/api/logout", async (req, res) => {
   }
 });
 
-// Get current user
 app.get("/api/me", requireAuth, async (req, res) => {
   try {
     const user = await User.findById(req.session.userId).select("-password");
@@ -137,7 +119,6 @@ app.get("/api/me", requireAuth, async (req, res) => {
   }
 });
 
-// Get all users (except self)
 app.get("/api/users", requireAuth, async (req, res) => {
   try {
     const users = await User.find({ _id: { $ne: req.session.userId } })
@@ -149,12 +130,10 @@ app.get("/api/users", requireAuth, async (req, res) => {
   }
 });
 
-// Get chat history between two users
 app.get("/api/messages/:userId", requireAuth, async (req, res) => {
   try {
     const me = req.session.userId;
     const other = req.params.userId;
-
     const messages = await Message.find({
       $or: [
         { sender: me, receiver: other },
@@ -167,46 +146,36 @@ app.get("/api/messages/:userId", requireAuth, async (req, res) => {
       .populate("receiver", "username")
       .lean();
 
-    // Mark messages as read
-    await Message.updateMany(
-      { sender: other, receiver: me, read: false },
-      { read: true }
-    );
-
+    await Message.updateMany({ sender: other, receiver: me, read: false }, { read: true });
     res.json(messages);
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
 });
 
-// Get last messages for each conversation (for sidebar preview)
 app.get("/api/conversations", requireAuth, async (req, res) => {
   try {
     const me = req.session.userId;
-    const messages = await Message.find({
-      $or: [{ sender: me }, { receiver: me }],
-    })
+    const messages = await Message.find({ $or: [{ sender: me }, { receiver: me }] })
       .sort({ timestamp: -1 })
       .populate("sender", "username")
       .populate("receiver", "username")
       .lean();
 
-    // Build map: otherId → latest message
     const convMap = new Map();
     for (const msg of messages) {
-      const otherId = msg.sender._id.toString() === me.toString()
-        ? msg.receiver._id.toString()
-        : msg.sender._id.toString();
+      const otherId =
+        msg.sender._id.toString() === me.toString()
+          ? msg.receiver._id.toString()
+          : msg.sender._id.toString();
       if (!convMap.has(otherId)) convMap.set(otherId, msg);
     }
-
     res.json(Object.fromEntries(convMap));
   } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
 });
 
-// Get unread counts
 app.get("/api/unread", requireAuth, async (req, res) => {
   try {
     const me = req.session.userId;
@@ -222,77 +191,52 @@ app.get("/api/unread", requireAuth, async (req, res) => {
   }
 });
 
-// ─── Socket Map: userId → socketId ───────────────────────────────────────────
-const userSockets = new Map(); // userId → socket
+// ── Socket.io ─────────────────────────────────────────────────────────────────
+
+const userSockets = new Map();
 
 io.on("connection", async (socket) => {
-  const session = socket.request.session;
-  if (!session || !session.userId) {
-    socket.disconnect();
-    return;
-  }
+  const sess = socket.request.session;
+  if (!sess || !sess.userId) { socket.disconnect(); return; }
 
-  const userId = session.userId.toString();
-  const username = session.username;
-
-  // Register socket
+  const userId = sess.userId.toString();
+  const username = sess.username;
   userSockets.set(userId, socket);
-  console.log(`��� ${username} connected (${socket.id})`);
+  console.log(`🔌 ${username} connected`);
 
-  // Mark online
   await User.findByIdAndUpdate(userId, { online: true });
   io.emit("user_status", { userId, online: true });
 
-  // ── Send private message ────────────────────────────────────────────────────
   socket.on("send_message", async ({ receiverId, text }) => {
     if (!text || !text.trim() || !receiverId) return;
-
     try {
-      const msg = await Message.create({
-        sender: userId,
-        receiver: receiverId,
-        text: text.trim(),
-      });
-
+      const msg = await Message.create({ sender: userId, receiver: receiverId, text: text.trim() });
       const populated = await msg.populate([
         { path: "sender", select: "username" },
         { path: "receiver", select: "username" },
       ]);
-
       const payload = populated.toObject();
-
-      // Emit to sender
       socket.emit("receive_message", payload);
-
-      // Emit to receiver if online
       const receiverSocket = userSockets.get(receiverId.toString());
-      if (receiverSocket) {
-        receiverSocket.emit("receive_message", payload);
-      }
+      if (receiverSocket) receiverSocket.emit("receive_message", payload);
     } catch (err) {
-      console.error("Message save error:", err.message);
+      console.error("Message error:", err.message);
     }
   });
 
-  // ── Typing indicator ────────────────────────────────────────────────────────
   socket.on("typing", ({ receiverId, isTyping }) => {
     const receiverSocket = userSockets.get(receiverId.toString());
-    if (receiverSocket) {
-      receiverSocket.emit("user_typing", { senderId: userId, isTyping });
-    }
+    if (receiverSocket) receiverSocket.emit("user_typing", { senderId: userId, isTyping });
   });
 
-  // ── Disconnect ──────────────────────────────────────────────────────────────
   socket.on("disconnect", async () => {
     userSockets.delete(userId);
     await User.findByIdAndUpdate(userId, { online: false, lastSeen: new Date() });
     io.emit("user_status", { userId, online: false });
-    console.log(`��� ${username} disconnected`);
+    console.log(`👋 ${username} disconnected`);
   });
 });
 
-// ─── Start Server ─────────────────────────────────────────────────────────────
 server.listen(PORT, () => {
-  console.log(`��� Server running at http://localhost:${PORT}`);
-  console.log(`��� First time? Create a user at http://localhost:${PORT}`);
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
 });

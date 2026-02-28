@@ -1,69 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Chat</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nexus Chat</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 </head>
+<body class="chat-body">
+<div class="chat-app" id="chat-app">
 
-<body>
-    <div class="chat-app" id="chatApp" style="display: none;">
-        <!-- Sidebar -->
-        <div class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <h2>Chats</h2>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <span id="currentUserDisplay" style="font-weight: 600; font-size: 0.9rem; margin-top: 3px;"></span>
-                    <button id="logoutBtn" class="logout-btn">Logout</button>
-                </div>
-            </div>
-            <ul class="user-list" id="userList">
-                <!-- User items injected by JS -->
-            </ul>
-        </div>
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <header class="sidebar-header">
+      <div class="sidebar-brand">
+        <svg viewBox="0 0 48 48" fill="none" width="28" height="28">
+          <circle cx="24" cy="24" r="24" fill="url(#sg)"/>
+          <path d="M24 10C16.268 10 10 16.268 10 24c0 2.508.65 4.863 1.79 6.912L10 38l7.412-1.79A13.928 13.928 0 0024 38c7.732 0 14-6.268 14-14S31.732 10 24 10z" fill="white"/>
+          <defs><linearGradient id="sg" x1="0" y1="0" x2="48" y2="48"><stop offset="0%" stop-color="#6C63FF"/><stop offset="100%" stop-color="#3ECFCF"/></linearGradient></defs>
+        </svg>
+        <span class="brand-name">Nexus</span>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" title="Profile" onclick="showProfile()">
+          <div class="me-avatar" id="me-avatar">?</div>
+        </button>
+        <button class="icon-btn" title="Sign out" onclick="logout()">
+          <svg viewBox="0 0 24 24" fill="none" width="19"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </header>
 
-        <!-- Main Chat Area -->
-        <div class="chat-main" id="chatMain" style="display: none;">
-            <div class="chat-header">
-                <button class="back-btn" id="backBtn">←</button>
-                <div class="avatar" id="chatHeaderAvatar">U</div>
-                <div class="user-info">
-                    <div class="user-name" id="chatHeaderName">User Name</div>
-                    <div class="user-status" id="chatHeaderStatus">offline</div>
-                </div>
-            </div>
-
-            <div class="chat-messages" id="chatMessages">
-                <!-- Messages injected by JS -->
-            </div>
-
-            <div style="padding: 0 1.5rem 0.5rem 1.5rem; font-size: 0.8rem; color: #888; display: none;"
-                id="typingIndicator">
-                typing...
-            </div>
-
-            <form class="chat-input-container" id="chatForm">
-                <input type="text" id="messageInput" class="chat-input" placeholder="Type a message..."
-                    autocomplete="off">
-                <button type="submit" class="send-btn">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
-                    </svg>
-                </button>
-            </form>
-        </div>
-
-        <!-- Empty State -->
-        <div class="empty-chat" id="emptyChat">
-            Select a conversation to start chatting
-        </div>
+    <div class="search-bar">
+      <svg viewBox="0 0 24 24" fill="none" width="15"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.8"/><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <input type="text" id="search-input" placeholder="Search users..." oninput="filterUsers(this.value)" />
     </div>
 
-    <!-- Socket.IO library via CDN -->
-    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
-    <script src="js/chat.js"></script>
-</body>
+    <div class="users-list" id="users-list">
+      <div class="list-placeholder">
+        <div class="spinner"></div>
+        <p>Loading users...</p>
+      </div>
+    </div>
+  </aside>
 
+  <!-- CHAT PANEL -->
+  <main class="chat-panel" id="chat-panel">
+
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">
+        <svg viewBox="0 0 80 80" fill="none" width="68">
+          <circle cx="40" cy="40" r="40" fill="url(#eg)"/>
+          <path d="M40 16C28.954 16 20 24.954 20 36c0 3.347.824 6.503 2.282 9.267L20 52l7.267-2.282A19.9 19.9 0 0040 52c11.046 0 20-8.954 20-16S51.046 16 40 16z" fill="white" fill-opacity="0.9"/>
+          <defs><linearGradient id="eg" x1="0" y1="0" x2="80" y2="80"><stop stop-color="#6C63FF"/><stop offset="1" stop-color="#3ECFCF"/></linearGradient></defs>
+        </svg>
+      </div>
+      <h3>Welcome to Nexus</h3>
+      <p>Select a user to start chatting</p>
+    </div>
+
+    <div class="active-chat hidden" id="active-chat">
+
+      <header class="chat-header">
+        <button class="back-btn" id="back-btn" onclick="closeChat()">
+          <svg viewBox="0 0 24 24" fill="none" width="22"><path d="M19 12H5M5 12l7 7M5 12l7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="chat-header-avatar" id="chat-header-avatar">?</div>
+        <div class="chat-header-info">
+          <div class="chat-header-name" id="chat-header-name">User</div>
+          <div class="chat-header-status">
+            <span class="status-indicator" id="chat-status-dot"></span>
+            <span id="chat-status-text">Offline</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="messages-area" id="messages-area"></div>
+
+      <div class="typing-row hidden" id="typing-row">
+        <div class="typing-bubble">
+          <span class="typing-dot"></span>
+          <span class="typing-dot"></span>
+          <span class="typing-dot"></span>
+        </div>
+        <span id="typing-label">typing...</span>
+      </div>
+
+      <div class="input-bar">
+        <button class="emoji-btn" onclick="toggleEmojiPicker()" title="Emoji">
+          <svg viewBox="0 0 24 24" fill="none" width="22"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/><path d="M8 13s1.5 2 4 2 4-2 4-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="9" cy="9.5" r="1" fill="currentColor"/><circle cx="15" cy="9.5" r="1" fill="currentColor"/></svg>
+        </button>
+        <div class="emoji-picker hidden" id="emoji-picker">
+          <div class="emoji-grid" id="emoji-grid"></div>
+        </div>
+        <div class="msg-input-wrap">
+          <textarea id="message-input" placeholder="Type a message..." rows="1" maxlength="4000"></textarea>
+        </div>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()">
+          <svg viewBox="0 0 24 24" fill="none" width="20"><path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Profile Modal -->
+<div class="modal-overlay hidden" id="profile-modal" onclick="hideProfile()">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-avatar" id="profile-modal-avatar">?</div>
+    <div class="modal-username" id="profile-modal-name">User</div>
+    <div class="modal-tag">Your account</div>
+    <button class="btn-primary" style="margin-top:20px" onclick="logout()">Sign Out</button>
+    <button class="btn-ghost" onclick="hideProfile()">Close</button>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="app.js"></script>
+</body>
 </html>

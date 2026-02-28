@@ -1,6 +1,0 @@
-node_modules/
-mongodb-binaries/
-mongodb-memory-server/
-.env
-logs
-*.log
